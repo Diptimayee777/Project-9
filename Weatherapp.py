@@ -1,68 +1,112 @@
 from tkinter import *
-from tkinter import ttk
+import tkinter as tk
+from geopy.geocoders import Nominatim
+from tkinter import ttk, messagebox
+from timezonefinder import TimezoneFinder
+from datetime import datetime
 import requests
-
-def data_get():
-    global w_label1, wb_label1, temp_label1, per_label1
-    city=city_name.get()
-    data= requests.get("https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid=your_api_key").json()
-    w_label1.config(text=data["weather"][0]["main"])
-    wb_label1.config(text=data["weather"][0]["description"])
-    temp_label1.config(text=str(int(data["main"]["temp"]-273.15)))
-    per_label1.config(text=data["main"]["pressure"])
-
-win= Tk()
-win.title("WEATHER APP")
-win.config(bg="navyblue")
-win.geometry("500x570")
-
-name_label=Label(win, text=("WEATHER APP"),
-                 font=("Time New Roman", 30, "bold"))
-name_label.place(x=25, y=50, height=50, width=450)
-
-city_label=Label(win, text="Enter City Name:",
-              font=("Time New Roman", 17))
-city_label.place(x=25, y=120, height=50, width=200)
-
-city_name = StringVar()
-city_entry=Entry(win, textvariable=city_name, font=("Time New Roman", 20))
-city_entry.place(x=250, y=120, height=50, width=210)
-
-done_button= Button(win, text="Done", 
-                    font=("Time New Roman", 20, "bold"), command=data_get)
-done_button.place(y=190, height=50, width=100, x=200)  
-
-w_label=Label(win, text="Weather Climate:",
-              font=("Time New Roman", 17))
-w_label.place(x=25, y=260, height=50, width=210)
-
-w_label1=Label(win, text="",
-              font=("Time New Roman", 17))
-w_label1.place(x=250, y=260, height=50, width=210)
-
-wb_label=Label(win, text="Weather Description:",
-              font=("Time New Roman", 16))
-wb_label.place(x=25, y=330, height=50, width=210)
-wb_label1=Label(win, text="",
-              font=("Time New Roman", 17))
-wb_label1.place(x=250, y=330, height=50, width=210)
+import pytz
 
 
-temp_label=Label(win, text="Temperature:",
-              font=("Time New Roman", 17))
-temp_label.place(x=25, y=400, height=50, width=210)
+root=Tk()
+root.title("Weather App")
+root.geometry("900x500+300+200")
+root.resizable(False, False)
 
-temp_label1=Label(win, text="",
-              font=("Time New Roman", 20))
-temp_label1.place(x=250, y=400, height=50, width=210)
+def get_weather():
+    try:
+        city=textfield.get()
+
+        geolocator= Nominatim(user_agent="geoapiExercises")
+        location= geolocator.geocode(city)
+        obj=TimezoneFinder()
+        result=obj.timezone_at(lng=location.longitude, lat=location.latitude)
+
+        home=pytz.timezone(result)
+        local_time=datetime.now(home)
+        current_time=local_time.strftime("%I:%M:%p")
+        clock.config(text=current_time)
+        name.config(text="CURRENT WEATHER")
+
+        api = "https://api.openweathermap.org/data/2.5/weather?q=" +city+"&appid=8dc5dcfd740f9fc67610bcf75d464891"
+
+        json_data= requests.get(api).json()
+        condition= json_data['weather'][0]['main']
+        description= json_data['weather'][0]['description']
+        temp= int(json_data['main']['temp']-273.15)
+        pressure= json_data['main']['pressure']
+        humidity= json_data['main']['humidity']
+        wind= json_data['wind']['speed']
+        
+        t.config(text=(temp, "°"))
+        c.config(text=(condition, "|", "FEELS", "LIKE", temp, "°"))
+        w.config(text=wind)
+        h.config(text=humidity)
+        d.config(text=description)
+        p.config(text=pressure)
+    except Exception as e:
+        # handle the exception
+        print(f"An error occurred: {e}")
 
 
-per_label=Label(win, text="Pressure:",
-              font=("Time New Roman", 17))
-per_label.place(x=25, y=470, height=50, width=210)
+#searchbox
 
-per_label1=Label(win, text="",
-              font=("Time New Roman", 20))
-per_label1.place(x=250, y=470, height=50, width=210)
+Search_image=PhotoImage(file="searchbox.png")
+myimage=Label(image=Search_image)
+myimage.place(x=20, y=20)
 
-win.mainloop()
+textfield=tk.Entry(root, justify="center",width=17, font=("poppins", 25, "bold"), bg="#404040", border=0, fg="white")
+textfield.place(x=50, y=40)
+textfield.focus()
+
+Search_icon=PhotoImage(file="search_icon.png")
+myimage_icon=Button(image=Search_icon,borderwidth=0, cursor="hand2", bg="#404040", command=get_weather)
+myimage_icon.place(x=400, y=34)
+
+#logo
+Logo_image=PhotoImage(file="logo.png")
+logo=Label(image=Logo_image)
+logo.place(x=150, y=100)
+
+#Bottom box
+Frame_image=PhotoImage(file="box.png")
+frame_myimage=Label(image=Frame_image)
+frame_myimage.pack(padx=5, pady=5, side=BOTTOM)
+
+#time
+name=Label(root, font=("aerial", 15, "bold"))
+name.place(x=330, y= 100)
+clock=Label(root, font=("Helvetica", 20))
+clock.place(x=30,y=130)
+
+#LABEL
+label1= Label(root, text="WIND", font=("Helvetica", 15, "bold"),fg="white", bg="#1ab5ef")
+label1.place(x=120, y=400)
+
+label2= Label(root, text="HUMIDITY", font=("Helvetica", 15, "bold"),fg="white", bg="#1ab5ef")
+label2.place(x=250, y=400)
+
+label3= Label(root, text="DESCRIPTION", font=("Helvetica", 15, "bold"),fg="white", bg="#1ab5ef")
+label3.place(x=430, y=400)
+
+label4= Label(root, text="PRESSURE", font=("Helvetica", 15, "bold"),fg="white", bg="#1ab5ef")
+label4.place(x=650, y=400)
+
+t=Label(font=("aerial", 70, "bold"), fg="#ee666d")
+t.place(x=400, y=150)
+c=Label(font=("aerial", 15, "bold"))
+c.place(x=400, y=250)
+
+w=Label(text="...", font=("aerial", 20, "bold"), bg="#1ab5ef")
+w.place(x=120, y=430)
+h=Label(text="...", font=("aerial", 20, "bold"), bg="#1ab5ef")
+h.place(x=280, y=430)
+d=Label(text="...", font=("aerial", 20, "bold"), bg="#1ab5ef")
+d.place(x=450, y=430)
+p=Label(text="...", font=("aerial", 20, "bold"), bg="#1ab5ef")
+p.place(x=670, y=430)
+
+
+
+
+root.mainloop()
